@@ -6,8 +6,9 @@ void array_init();
 int is_array(obj a);
 obj array_new(size_t n, obj val);
 size_t array_len(obj a);
+size_t array_capacity(obj a);
 obj array_get(obj a, int i);
-obj array_set(obj a, int i, obj o);
+void array_set(obj a, int i, obj o);
 void array_push(obj a, obj o);
 void array_sort(obj a);
 
@@ -33,8 +34,8 @@ void array_print(obj a) {
   printf("[");
   for(int i=0; i<array_len(a); ++i) {
     auto_begin();
-    if(i) printf(",");
-    obj_print(str_obj(array_get(a, i)));
+    if(i) printf(", ");
+    obj_print(array_get(a, i));
     auto_end();
   }
   printf("]");
@@ -43,7 +44,7 @@ void array_print(obj a) {
 obj array_str(obj a) {
   auto_begin();
   obj r = str_c("[");
-  obj comma = str_c(",");
+  obj comma = str_c(", ");
   for(int i=0; i<array_len(a); ++i) {
     auto_begin();
     if(i) str_push(r, comma);
@@ -90,14 +91,13 @@ int is_array(obj a) {
 obj array_new(size_t n, obj val) {
   auto_begin();
   array_data * ad = auto_new(sizeof(array_data), array_type_id);
-  ad->capacity = size_pow2(n==0 ? 1 : n);
+  size_t cap = size_pow2(n==0 ? 1 : n);
+  ad->capacity = cap;
   ad->len = n;
-  ad->data = raw_new(ad->capacity*sizeof(obj));
+  ad->data = raw_new(cap*sizeof(obj)); ref(ad->data);
   for(int i=0; i<n; ++i) {
-    ad->data[i] = val;
-    ref(val);
+    ad->data[i] = val; ref(val);
   }
-  ref(ad->data);
   auto_end_return(ad);
 }
 
@@ -105,6 +105,12 @@ size_t array_len(obj a) {
   assert(is_array(a));
   array_data * ad = a;
   return ad->len;
+}
+
+size_t array_capacity(obj a) {
+  assert(is_array(a));
+  array_data * ad = a;
+  return ad->capacity;
 }
 
 obj array_get(obj a, int i) {
@@ -117,16 +123,12 @@ obj array_get(obj a, int i) {
   return o;
 }
 
-obj array_set(obj a, int i, obj o) {
+void array_set(obj a, int i, obj o) {
   assert(is_array(a));
   assert(i>=0 && i<array_len(a));
   array_data * ad = a;
   unref(ad->data[i]);
-  ad->data[i] = o;
-  ref(o);
-  ref(o);
-  auto_push(o);
-  return o;
+  ad->data[i] = o; ref(o);
 }
 
 void array_push(obj a, obj o) {
@@ -141,8 +143,7 @@ void array_push(obj a, obj o) {
     memcpy(nd, ad->data, ad->len*sizeof(obj));
     unref(ad->data);
     ad->capacity = nc;
-    ad->data = nd;
-    ref(nd);
+    ad->data = nd; ref(nd);
   } 
   ad->data[ad->len] = o; ref(o);
   ad->len = nlen;

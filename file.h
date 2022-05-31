@@ -80,10 +80,10 @@ obj file_readline(obj f) {
 
 obj file_lines(obj f) {
   assert(is_file(f));
+  auto_begin();
   FILE ** fp = f;
   fseek(*fp, SEEK_SET, 0);
-  auto_begin();
-  obj a = array_new(0,nil);
+  obj a = array_new(0, nil);
   while(1) {
     auto_begin();
     obj l = file_readline(f);

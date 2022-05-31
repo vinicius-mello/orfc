@@ -3,6 +3,7 @@
 
 #include "utl.h"
 #include "obj.h"
+#include "pair.h"
 #include "array.h"
 #include "str.h"
 #include "num.h"

@@ -5,6 +5,9 @@
 #define OBJ_IMPLEMENTATION
 #include "obj.h"
 #undef OBJ_IMPLEMENTATION
+#define PAIR_IMPLEMENTATION
+#include "pair.h"
+#undef PAIR_IMPLEMENTATION
 #define ARRAY_IMPLEMENTATION
 #include "array.h"
 #undef ARRAY_IMPLEMENTATION
@@ -24,7 +27,9 @@
 void orfc_init() {
   obj_init();
   array_init();
+  pair_init();
   str_init();
   num_init();
   ht_init();
+  file_init();
 }

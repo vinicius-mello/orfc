@@ -30,16 +30,18 @@ typedef struct str_data {
 } str_data;
 
 void str_free(obj s) {
-  str_data * ad = s;
-  unref(ad->data);
+  str_data * sd = s;
+  unref(sd->data);
 }
 
 void str_print(obj s) {
-  str_data * ad = s;
-  char * d = (char *)ad->data;
-  for(int i=0; i<ad->len; ++i) {
+  str_data * sd = s;
+  char * d = (char *)sd->data;
+  putc('"', stdout);
+  for(int i=0; i<sd->len; ++i) {
     putc(d[i], stdout);
   }
+  putc('"', stdout);
 }
 
 obj str_str(obj s) {
@@ -74,15 +76,15 @@ int is_str(obj o) {
 
 obj str_new(size_t n, char * s) {
   auto_begin();
-  str_data * ad = auto_new(sizeof(str_data), str_type_id);
-  ad->len = n;
-  ad->capacity = size_pow2(n+1);
-  ad->data = raw_new(ad->capacity);
-  ref(ad->data);
-  char * sd = (char *)ad->data;
-  memcpy(sd, s, ad->len);
-  sd[ad->len] = 0;
-  auto_end_return(ad);
+  str_data * sd = auto_new(sizeof(str_data), str_type_id);
+  sd->len = n;
+  sd->capacity = size_pow2(n+1);
+  sd->data = raw_new(sd->capacity);
+  ref(sd->data);
+  char * sp = (char *)sd->data;
+  memcpy(sp, s, sd->len);
+  sp[sd->len] = 0;
+  auto_end_return(sd);
 }
 
 obj str_c(char * s) {
@@ -93,53 +95,46 @@ obj str_c(char * s) {
 
 size_t str_len(obj s) {
   assert(is_str(s));
-  str_data * ad = s;
-  return ad->len;
+  str_data * sd = s;
+  return sd->len;
 }
 
 char * c_str(obj s) {
   assert(is_str(s));
-  str_data * ad = s;
-  return (char *)ad->data;
+  str_data * sd = s;
+  return (char *)sd->data;
 }
 
 obj str_cat(obj sa, obj sb) {
   assert(is_str(sa) && is_str(sb));
   auto_begin();
-  str_data * ad = sa;
-  str_data * bd = sb;
-  str_data * nd = auto_new(sizeof(str_data), str_type_id);
-  nd->len = ad->len+bd->len;
-  nd->capacity = size_pow2(nd->len+1);
-  nd->data = raw_new(nd->capacity);
-  ref(nd->data);
-  char * s = (char *)nd->data;
-  memcpy(s, (char *)ad->data, ad->len);
-  memcpy(s+ad->len, (char *)bd->data, bd->len+1);
-  auto_end_return(nd);
+  obj r = str_c("");
+  str_push(r, sa);
+  str_push(r, sb);
+  auto_end_return(r);
 }
 
 int str_cmp(obj a, obj b) {
   return strcmp(c_str(a), c_str(b));
 }
 
-void str_put(obj sa, char c) {
-  assert(is_str(sa));
+void str_put(obj s, char c) {
+  assert(is_str(s));
   auto_begin();
-  str_data * ad = sa;
-  int nlen = ad->len+1;
-  if(nlen+1>ad->capacity) {
+  str_data * sd = s;
+  int nlen = sd->len+1;
+  if(nlen+1>sd->capacity) {
     int nc = size_pow2(nlen+1);
     obj nd = raw_new(nc);
-    memcpy(nd, ad->data, ad->len);
-    unref(ad->data);
-    ad->capacity = nc;
-    ad->data = nd; ref(nd);
+    memcpy(nd, sd->data, sd->len);
+    unref(sd->data);
+    sd->capacity = nc;
+    sd->data = nd; ref(nd);
   } 
-  char * d = ad->data;
-  d[ad->len] = c;
-  d[ad->len+1] = 0;
-  ad->len = nlen;
+  char * d = sd->data;
+  d[sd->len] = c;
+  d[sd->len+1] = 0;
+  sd->len = nlen;
   auto_end();
 }
 
