@@ -2,6 +2,13 @@
 #define UTL_H
 #include <stddef.h>
 
+#define concat(a, b) a##b
+#define macro_var(name) concat(name, __LINE__)
+#define defer(start, end) for(           \
+	int macro_var(_i_) = (start, 0); \
+	!macro_var(_i_);                 \
+	(macro_var(_i_)+=1), end)        \
+
 size_t lg(size_t n);
 size_t size_pow2(size_t n);
 
