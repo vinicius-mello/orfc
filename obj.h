@@ -29,7 +29,7 @@ void auto_push(obj o);
 obj auto_pop();
 void auto_begin();
 void auto_end();
-#define scope defer(auto_begin(),auto_end())
+#define obj_scope defer(auto_begin(),auto_end())
 #define auto_end_return(o) ref(o); auto_end(); auto_push(o); return o
 #define obj_return(o) auto_push(o); return o
 void ref(obj o);
@@ -80,7 +80,7 @@ void nil_print(obj o) {
 
 obj nil_str(obj o) {
   obj r;
-  scope { 
+  obj_scope { 
     r = str_c("nil");
     ref(r);
   }
@@ -110,7 +110,7 @@ obj raw_str(obj o) {
   static char buf[256];
   sprintf(&buf[0], "%p", o);
   obj r;
-  scope {
+  obj_scope {
     r = str_c(&buf[0]);
     ref(r);
   }
@@ -167,7 +167,7 @@ void obj_print(obj o) {
 
 obj str_obj(obj o) {
   obj r;
-  scope {
+  obj_scope {
     r = types[obj_type(o)]->str(o);
     ref(r);
   }
@@ -236,7 +236,7 @@ obj auto_new(size_t n, int type) {
 
 obj raw_new(size_t n) {
   obj o;
-  scope {
+  obj_scope {
     o = auto_new(n, raw_type_id);
     ref(o);
   }

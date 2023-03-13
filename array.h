@@ -34,7 +34,7 @@ void array_free(obj a) {
 void array_print(obj a) {
   printf("[");
   for(int i=0; i<array_len(a); ++i) {
-    scope {
+    obj_scope {
       if(i) printf(", ");
       obj_print(str_obj(array_get(a, i)));
     }
@@ -44,11 +44,11 @@ void array_print(obj a) {
 
 obj array_str(obj a) {
   obj r;
-  scope {
+  obj_scope {
     r = str_c("[");
     obj comma = str_c(", ");
     for(int i=0; i<array_len(a); ++i) {
-      scope {
+      obj_scope {
         if(i) str_push(r, comma);
         str_push(r, str_obj(array_get(a, i)));
       }
@@ -66,7 +66,7 @@ int array_cmpi(const void * a, const void * b) {
   int lb = array_len(bb);
   for(int i=0; i<la && i<lb; ++i) {
     int c;
-    scope {
+    obj_scope {
       obj ao = array_get(aa, i);
       obj bo = array_get(bb, i);
       c = obj_cmpi(&ao, &bo);
@@ -95,7 +95,7 @@ bool is_array(obj a) {
 
 obj array_new(size_t n, obj val) {
   array_data * ad;
-  scope {
+  obj_scope {
     ad = auto_new(sizeof(array_data), array_type_id);
     size_t cap = size_pow2(n==0 ? 1 : n);
     ad->capacity = cap;
@@ -141,7 +141,7 @@ void array_set(obj a, int i, obj o) {
 
 void array_push(obj a, obj o) {
   assert(is_array(a));
-  scope {
+  obj_scope {
     array_data * ad = a;
     int nlen = ad->len+1;
     int c = ad->capacity;

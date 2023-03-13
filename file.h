@@ -54,7 +54,7 @@ int is_file(obj o) {
 obj file_open(obj s, obj m) {
   assert(is_str(s) && is_str(m));
   FILE ** ad;
-  scope {
+  obj_scope {
     ad = auto_new(sizeof(FILE *), file_type_id);
     *ad = fopen(c_str(s), c_str(m));
     ref(ad);
@@ -71,7 +71,7 @@ obj file_readline(obj f) {
     obj_return(nil);
   }
   obj nd;
-  scope {
+  obj_scope {
     nd = str_c("");
     while(c!=EOF) {
       if(c=='\n') break;
@@ -88,7 +88,7 @@ obj file_lines(obj f) {
   FILE ** fp = f;
   fseek(*fp, SEEK_SET, 0);
   obj a;
-  scope {
+  obj_scope {
     a = array_new(0, nil);
     while(1) {
       auto_begin();

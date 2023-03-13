@@ -30,7 +30,7 @@ void pair_print(obj p) {
 
 obj pair_str(obj p) {
   obj r;
-  scope {
+  obj_scope {
     r = str_c("(");
     str_push(r, pair_first(p));
     str_push(r, str_c(", "));
@@ -69,7 +69,7 @@ int is_pair(obj o) {
 
 obj pair_new(obj o1, obj o2) {
   obj * o;
-  scope {
+  obj_scope {
     o = auto_new(2*sizeof(obj), pair_type_id);
     o[0] = o1; ref(o1);
     o[1] = o2; ref(o2);

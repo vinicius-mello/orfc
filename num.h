@@ -36,7 +36,7 @@ obj num_str(obj n) {
   else 
     sprintf(&buf[0], "%f", *d);
   obj r;
-  scope { 
+  obj_scope { 
     r = str_c(&buf[0]);
     ref(r);;
   }
@@ -67,7 +67,7 @@ int is_num(obj o) {
 
 obj num_int(int n) {
   double * d;
-  scope {
+  obj_scope {
     d = auto_new(sizeof(double), num_type_id);
     *d = (double) n;
     ref(d);
@@ -77,7 +77,7 @@ obj num_int(int n) {
 
 obj num_double(double n) {
   double * d;
-  scope {
+  obj_scope {
     d = auto_new(sizeof(double), num_type_id);
     *d = n;
     ref(d);

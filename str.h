@@ -46,7 +46,7 @@ void str_print(obj s) {
 
 obj str_str(obj s) {
   obj r;
-  scope {
+  obj_scope {
     r = str_c("");
     str_push(r, str_c("\""));
     str_push(r, s);
@@ -79,7 +79,7 @@ int is_str(obj o) {
 
 obj str_new(size_t n, char * s) {
   str_data * sd;
-  scope {
+  obj_scope {
     sd = auto_new(sizeof(str_data), str_type_id);
     sd->len = n;
     sd->capacity = size_pow2(n+1);
@@ -95,7 +95,7 @@ obj str_new(size_t n, char * s) {
 
 obj str_c(char * s) {
   obj o;
-  scope {
+  obj_scope {
     o = str_new(strlen(s), s);
     ref(o);
   }
@@ -117,7 +117,7 @@ char * c_str(obj s) {
 obj str_cat(obj sa, obj sb) {
   assert(is_str(sa) && is_str(sb));
   obj r;
-  scope {
+  obj_scope {
     r = str_c("");
     str_push(r, sa);
     str_push(r, sb);
@@ -132,7 +132,7 @@ int str_cmp(obj a, obj b) {
 
 void str_put(obj s, char c) {
   assert(is_str(s));
-  scope {
+  obj_scope {
     str_data * sd = s;
     int nlen = sd->len+1;
     if(nlen+1>sd->capacity) {
@@ -152,7 +152,7 @@ void str_put(obj s, char c) {
 
 void str_push(obj sa, obj sb) {
   assert(is_str(sa) && is_str(sb));
-  scope {
+  obj_scope {
     str_data * ad = sa;
     str_data * bd = sb;
     int nlen = ad->len+bd->len;
@@ -173,14 +173,14 @@ void str_push(obj sa, obj sb) {
 obj str_split(obj sa, obj sb) {
   assert(is_str(sa) && is_str(sb));
   obj a;
-  scope {
+  obj_scope {
     a = array_new(0, nil);
     char * pa = c_str(sa);
     char * pb = c_str(sb);
     char * i = pa;
     char * j; 
     while(j=strstr(i, pb)) {
-      scope {
+      obj_scope {
         array_push(a, str_new(j-i, i));
         i = j + str_len(sb);
       }
@@ -196,10 +196,10 @@ obj str_split(obj sa, obj sb) {
 obj str_join(obj a, obj s) {
   assert(is_array(a) && is_str(s));
   obj r;
-  scope {
+  obj_scope {
     r = str_c("");
     for(int i=0; i<array_len(a); ++i) {
-      scope {
+      obj_scope {
         if(i) str_push(r, s);
         str_push(r, array_get(a, i));
       }

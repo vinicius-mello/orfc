@@ -22,7 +22,7 @@ typedef struct ht_data {
 obj ht_bucket_get(obj t, int i) {
   ht_data * td = t;
   obj r;
-  scope {
+  obj_scope {
     r = array_get(td->buckets, i);
     ref(r);
   }
@@ -73,7 +73,7 @@ void ht_print(obj t) {
   int f = 0;
   int cap = ht_capacity(t);
   for(int i=0; i<cap; ++i) {
-    scope {
+    obj_scope {
       obj kv = ht_bucket_get(t, i);
       if(!is_nil(kv)) {
         obj key = pair_first(kv);
@@ -92,13 +92,13 @@ void ht_print(obj t) {
 
 obj ht_str(obj t) {
   obj r;
-  scope {
+  obj_scope {
     r = str_c("{");
     obj comma = str_c(",");
     obj colon = str_c(" : ");
     int f = 0;
     for(int i=0; i<ht_capacity(t); ++i) {
-      scope {
+      obj_scope {
         obj kv = ht_bucket_get(t, i);
         if(!is_nil(kv)) {
           obj key = pair_first(kv);
@@ -140,7 +140,7 @@ int is_ht(obj t) {
 
 obj ht_new(size_t capacity) {
   ht_data * td;
-  scope {
+  obj_scope {
     td = auto_new(sizeof(ht_data), ht_type_id);
     capacity = size_pow2(capacity);
     td->occupation = 0;
@@ -154,7 +154,7 @@ obj ht_new(size_t capacity) {
 int ht_find(obj t, obj k) {
   assert(is_ht(t) && is_str(k));
   int i;
-  scope {
+  obj_scope {
     size_t cap = ht_capacity(t);
     i = djb2(c_str(k)) % cap;
     obj kv = ht_bucket_get(t, i);
@@ -181,18 +181,18 @@ obj ht_get(obj t, obj k) {
 
 void ht_pair_set(obj t, obj p) {
   assert(is_ht(t) && is_pair(p));
-  scope {
+  obj_scope {
     obj k = pair_first(p);
     int i = ht_find(t, k);
     obj kv = ht_bucket_get(t, i);
     if(is_nil(kv)) ht_occupation_inc(t);
     ht_bucket_set(t, i, p);
     if(ht_load_factor(t)>0.5) {
-      scope {
+      obj_scope {
         size_t cap = ht_capacity(t);
         obj t2 = ht_new(2*cap);
         for(int i=0; i<cap; ++i) {
-          scope {
+          obj_scope {
             obj kv = ht_bucket_get(t, i);
             if(!is_nil(kv)) 
               ht_pair_set(t2, kv);
@@ -210,14 +210,14 @@ void ht_pair_set(obj t, obj p) {
 
 void ht_set(obj t, obj k, obj v) {
   assert(is_str(k));
-  scope {
+  obj_scope {
     ht_pair_set(t, pair_new(k, v));
   }
 }
 
 void ht_del(obj t, obj k) {
   assert(is_ht(t) && is_str(k));
-  scope {
+  obj_scope {
     size_t cap = ht_capacity(t);
     int i = ht_find(t, k);
     obj kv = ht_bucket_get(t, i);
