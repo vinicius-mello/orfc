@@ -3,7 +3,7 @@
 #include "obj.h"
 
 void num_init();
-int is_num(obj o);
+bool is_num(obj o);
 obj num_int(int n);
 obj num_double(double n);
 int int_num(obj n);
@@ -27,17 +27,20 @@ void num_print(obj n) {
 }
 
 obj num_str(obj n) {
-  auto_begin();
   double * d = n;
   double i;
   modf(*d, &i);
-  static char buf[64];
+  static char buf[256];
   if(*d == i) 
     sprintf(&buf[0], "%d", (int)i);
   else 
     sprintf(&buf[0], "%f", *d);
-  obj r = str_c(&buf[0]);
-  auto_end_return(r);
+  obj r;
+  scope { 
+    r = str_c(&buf[0]);
+    ref(r);;
+  }
+  obj_return(r);
 }
 
 int num_cmpi(const void * a, const void * b) {
@@ -63,32 +66,42 @@ int is_num(obj o) {
 }
 
 obj num_int(int n) {
-  auto_begin();
-  double * d = auto_new(sizeof(double), num_type_id);
-  *d = (double) n;
-  auto_end_return(d);
+  double * d;
+  scope {
+    d = auto_new(sizeof(double), num_type_id);
+    *d = (double) n;
+    ref(d);
+  }
+  obj_return(d);
 }
 
 obj num_double(double n) {
-  auto_begin();
-  double * d = auto_new(sizeof(double), num_type_id);
-  *d = n;
-  auto_end_return(d);
+  double * d;
+  scope {
+    d = auto_new(sizeof(double), num_type_id);
+    *d = n;
+    ref(d);
+  }
+  obj_return(d);
 }
 
 int int_num(obj n) {
+  assert(is_num(n));
   return (int)(*(double *)n);
 }
 
 double double_num(obj n) {
+  assert(is_num(n));
   return (*(double *)n);
 }
 
 void num_int_set(obj o, int n) {
+  assert(is_num(o));
   (*(double *)o) = (double) n;
 }
 
 void num_double_set(obj o, double n) {
+  assert(is_num(o));
   (*(double *)o) = n;
 }
 

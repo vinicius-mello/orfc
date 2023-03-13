@@ -3,7 +3,7 @@
 #include "obj.h"
 
 void pair_init();
-int is_pair(obj o);
+bool is_pair(obj o);
 obj pair_new(obj o1, obj o2);
 obj pair_first(obj p);
 obj pair_second(obj p);
@@ -29,13 +29,16 @@ void pair_print(obj p) {
 }
 
 obj pair_str(obj p) {
-  auto_begin();
-  obj r = str_c("(");
-  str_push(r, pair_first(p));
-  str_push(r, str_c(", "));
-  str_push(r, pair_second(p));
-  str_push(r, str_c(")"));
-  auto_end_return(r);
+  obj r;
+  scope {
+    r = str_c("(");
+    str_push(r, pair_first(p));
+    str_push(r, str_c(", "));
+    str_push(r, pair_second(p));
+    str_push(r, str_c(")"));
+    ref(r);
+  }
+  obj_return(r);
 }
 
 int pair_cmpi(const void * a, const void * b) {
@@ -65,34 +68,39 @@ int is_pair(obj o) {
 }
 
 obj pair_new(obj o1, obj o2) {
-  auto_begin();
-  obj * o = auto_new(2*sizeof(obj), pair_type_id);
-  o[0] = o1; ref(o1);
-  o[1] = o2; ref(o2);
-  auto_end_return(o);
+  obj * o;
+  scope {
+    o = auto_new(2*sizeof(obj), pair_type_id);
+    o[0] = o1; ref(o1);
+    o[1] = o2; ref(o2);
+    ref(o);
+  }
+  obj_return(o);
 }
 
 obj pair_first(obj p) {
+  assert(is_pair(p));
   obj * pp = (obj *)p;
   ref(pp[0]);
-  auto_push(pp[0]);
-  return pp[0];
+  obj_return(pp[0]);
 }
 
 obj pair_second(obj p) {
+  assert(is_pair(p));
   obj * pp = (obj *)p;
   ref(pp[1]);
-  auto_push(pp[1]);
-  return pp[1];
+  obj_return(pp[1]);
 }
 
 void pair_first_set(obj p, obj o) {
+  assert(is_pair(p));
   obj * pp = (obj *)p;
   unref(pp[0]);
   pp[0] = o; ref(o);
 }
 
 void pair_second_set(obj p, obj o) {
+  assert(is_pair(p));
   obj * pp = (obj *)p;
   unref(pp[1]);
   pp[1] = o; ref(o);

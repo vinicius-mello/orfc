@@ -37,20 +37,23 @@ void str_free(obj s) {
 void str_print(obj s) {
   str_data * sd = s;
   char * d = (char *)sd->data;
-  putc('"', stdout);
+  //putc('"', stdout);
   for(int i=0; i<sd->len; ++i) {
     putc(d[i], stdout);
   }
-  putc('"', stdout);
+  //putc('"', stdout);
 }
 
 obj str_str(obj s) {
-  auto_begin();
-  obj r = str_c("");
-  str_push(r, str_c("\""));
-  str_push(r, s);
-  str_push(r, str_c("\""));
-  auto_end_return(r);
+  obj r;
+  scope {
+    r = str_c("");
+    str_push(r, str_c("\""));
+    str_push(r, s);
+    str_push(r, str_c("\""));
+    ref(r);
+  }
+  obj_return(r);
 }
 
 int str_cmpi(const void * a, const void * b) {
@@ -75,22 +78,28 @@ int is_str(obj o) {
 }
 
 obj str_new(size_t n, char * s) {
-  auto_begin();
-  str_data * sd = auto_new(sizeof(str_data), str_type_id);
-  sd->len = n;
-  sd->capacity = size_pow2(n+1);
-  sd->data = raw_new(sd->capacity);
-  ref(sd->data);
-  char * sp = (char *)sd->data;
-  memcpy(sp, s, sd->len);
-  sp[sd->len] = 0;
-  auto_end_return(sd);
+  str_data * sd;
+  scope {
+    sd = auto_new(sizeof(str_data), str_type_id);
+    sd->len = n;
+    sd->capacity = size_pow2(n+1);
+    sd->data = raw_new(sd->capacity);
+    ref(sd->data);
+    char * sp = (char *)sd->data;
+    memcpy(sp, s, sd->len);
+    sp[sd->len] = 0;
+    ref(sd);
+  }
+  obj_return(sd);
 }
 
 obj str_c(char * s) {
-  auto_begin();
-  obj o = str_new(strlen(s), s);
-  auto_end_return(o);
+  obj o;
+  scope {
+    o = str_new(strlen(s), s);
+    ref(o);
+  }
+  obj_return(o);
 }
 
 size_t str_len(obj s) {
@@ -107,11 +116,14 @@ char * c_str(obj s) {
 
 obj str_cat(obj sa, obj sb) {
   assert(is_str(sa) && is_str(sb));
-  auto_begin();
-  obj r = str_c("");
-  str_push(r, sa);
-  str_push(r, sb);
-  auto_end_return(r);
+  obj r;
+  scope {
+    r = str_c("");
+    str_push(r, sa);
+    str_push(r, sb);
+    ref(r);
+  }
+  obj_return(r);
 }
 
 int str_cmp(obj a, obj b) {
@@ -120,75 +132,81 @@ int str_cmp(obj a, obj b) {
 
 void str_put(obj s, char c) {
   assert(is_str(s));
-  auto_begin();
-  str_data * sd = s;
-  int nlen = sd->len+1;
-  if(nlen+1>sd->capacity) {
-    int nc = size_pow2(nlen+1);
-    obj nd = raw_new(nc);
-    memcpy(nd, sd->data, sd->len);
-    unref(sd->data);
-    sd->capacity = nc;
-    sd->data = nd; ref(nd);
-  } 
-  char * d = sd->data;
-  d[sd->len] = c;
-  d[sd->len+1] = 0;
-  sd->len = nlen;
-  auto_end();
+  scope {
+    str_data * sd = s;
+    int nlen = sd->len+1;
+    if(nlen+1>sd->capacity) {
+      int nc = size_pow2(nlen+1);
+      obj nd = raw_new(nc);
+      memcpy(nd, sd->data, sd->len);
+      unref(sd->data);
+      sd->capacity = nc;
+      sd->data = nd; ref(nd);
+    } 
+    char * d = sd->data;
+    d[sd->len] = c;
+    d[sd->len+1] = 0;
+    sd->len = nlen;
+  }
 }
 
 void str_push(obj sa, obj sb) {
   assert(is_str(sa) && is_str(sb));
-  auto_begin();
-  str_data * ad = sa;
-  str_data * bd = sb;
-  int nlen = ad->len+bd->len;
-  if(nlen+1>ad->capacity) {
-    int nc = size_pow2(nlen+1);
-    obj nd = raw_new(nc);
-    memcpy(nd, ad->data, ad->len);
-    unref(ad->data);
-    ad->capacity = nc;
-    ad->data = nd; ref(nd);
-  } 
-  char * d = ad->data;
-  strcpy(&d[ad->len], (char *)bd->data);
-  ad->len = nlen;
-  auto_end();
+  scope {
+    str_data * ad = sa;
+    str_data * bd = sb;
+    int nlen = ad->len+bd->len;
+    if(nlen+1>ad->capacity) {
+      int nc = size_pow2(nlen+1);
+      obj nd = raw_new(nc);
+      memcpy(nd, ad->data, ad->len);
+      unref(ad->data);
+      ad->capacity = nc;
+      ad->data = nd; ref(nd);
+    } 
+    char * d = ad->data;
+    strcpy(&d[ad->len], (char *)bd->data);
+    ad->len = nlen;
+  }
 }
 
 obj str_split(obj sa, obj sb) {
   assert(is_str(sa) && is_str(sb));
-  auto_begin();
-  obj a = array_new(0, nil);
-  char * pa = c_str(sa);
-  char * pb = c_str(sb);
-  char * i = pa;
-  char * j; 
-  while(j=strstr(i, pb)) {
-    auto_begin();
-    array_push(a, str_new(j-i, i));
-    i = j + str_len(sb);
-    auto_end();
+  obj a;
+  scope {
+    a = array_new(0, nil);
+    char * pa = c_str(sa);
+    char * pb = c_str(sb);
+    char * i = pa;
+    char * j; 
+    while(j=strstr(i, pb)) {
+      scope {
+        array_push(a, str_new(j-i, i));
+        i = j + str_len(sb);
+      }
+    }
+    j = pa + str_len(sa);
+    if(i != j)
+      array_push(a, str_new(j-i, i));
+    ref(a);
   }
-  j = pa + str_len(sa);
-  if(i != j)
-    array_push(a, str_new(j-i, i));
-  auto_end_return(a);
+  obj_return(a);
 }
 
 obj str_join(obj a, obj s) {
-  assert(is_str(s));
-  auto_begin();
-  obj r = str_c("");
-  for(int i=0; i<array_len(a); ++i) {
-    auto_begin();
-    if(i) str_push(r, s);
-    str_push(r, array_get(a, i));
-    auto_end();
+  assert(is_array(a) && is_str(s));
+  obj r;
+  scope {
+    r = str_c("");
+    for(int i=0; i<array_len(a); ++i) {
+      scope {
+        if(i) str_push(r, s);
+        str_push(r, array_get(a, i));
+      }
+    }
+    ref(r);
   }
-  auto_end_return(r);
+  obj_return(r);
 }
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef OBJ_H
 #define OBJ_H
 
-#include <stddef.h>
+#include "types.h"
 
 typedef void * obj;
 typedef void (*method)(obj);
@@ -29,12 +29,14 @@ void auto_push(obj o);
 obj auto_pop();
 void auto_begin();
 void auto_end();
+#define scope defer(auto_begin(),auto_end())
 #define auto_end_return(o) ref(o); auto_end(); auto_push(o); return o
+#define obj_return(o) auto_push(o); return o
 void ref(obj o);
 void unref(obj o);
-int is_nil(obj o);
+bool is_nil(obj o);
 extern obj nil;
-int is_raw(obj o);
+bool is_raw(obj o);
 obj raw_new(size_t n);
 
 #endif
@@ -77,9 +79,12 @@ void nil_print(obj o) {
 }
 
 obj nil_str(obj o) {
-  auto_begin();
-  obj r = str_c("nil");
-  auto_end_return(r);
+  obj r;
+  scope { 
+    r = str_c("nil");
+    ref(r);
+  }
+  obj_return(r);
 }
 
 int nil_cmpi(const void * a, const void * b) {
@@ -102,11 +107,14 @@ void raw_print(obj o) {
 }
 
 obj raw_str(obj o) {
-  auto_begin();
-  static char buf[64];
+  static char buf[256];
   sprintf(&buf[0], "%p", o);
-  obj r = str_c(&buf[0]);
-  auto_end_return(r);
+  obj r;
+  scope {
+    r = str_c(&buf[0]);
+    ref(r);
+  }
+  obj_return(r);
 }
 
 int raw_cmpi(const void * a, const void * b) {
@@ -130,7 +138,7 @@ void obj_init() {
   nil = heap_new(0, nil_type_id);
 }
 
-int is_nil(obj o) {
+bool is_nil(obj o) {
   return obj_type(o) == nil_type_id;
 }
 
@@ -158,9 +166,12 @@ void obj_print(obj o) {
 }
 
 obj str_obj(obj o) {
-  auto_begin();
-  obj r = types[obj_type(o)]->str(o);
-  auto_end_return(r);
+  obj r;
+  scope {
+    r = types[obj_type(o)]->str(o);
+    ref(r);
+  }
+  obj_return(r);
 }
 
 void obj_println(obj o) {
@@ -174,6 +185,7 @@ void auto_push(obj o) {
 }
 
 obj auto_pop() {
+  assert(stack_count>0);
   return stack[--stack_count];
 }
 
@@ -223,9 +235,12 @@ obj auto_new(size_t n, int type) {
 }
 
 obj raw_new(size_t n) {
-  auto_begin();
-  obj o = auto_new(n, raw_type_id);
-  auto_end_return(o);
+  obj o;
+  scope {
+    o = auto_new(n, raw_type_id);
+    ref(o);
+  }
+  obj_return(o);
 }
 
 int is_raw(obj o) {

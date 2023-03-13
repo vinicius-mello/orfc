@@ -3,7 +3,7 @@
 #include "obj.h"
 
 void file_init();
-int is_file(obj o);
+bool is_file(obj o);
 obj file_open(obj s, obj m);
 obj file_readline(obj f);
 obj file_lines(obj f);
@@ -53,10 +53,13 @@ int is_file(obj o) {
 
 obj file_open(obj s, obj m) {
   assert(is_str(s) && is_str(m));
-  auto_begin();
-  FILE ** ad = auto_new(sizeof(FILE *), file_type_id);
-  *ad = fopen(c_str(s), c_str(m));
-  auto_end_return(ad);
+  FILE ** ad;
+  scope {
+    ad = auto_new(sizeof(FILE *), file_type_id);
+    *ad = fopen(c_str(s), c_str(m));
+    ref(ad);
+  }
+  obj_return(ad);
 }
 
 obj file_readline(obj f) {
@@ -65,37 +68,41 @@ obj file_readline(obj f) {
   char c = fgetc(*fp);
   if(feof(*fp)) {
     ref(nil);
-    auto_push(nil);
-    return nil;
+    obj_return(nil);
   }
-  auto_begin();
-  obj nd = str_c("");
-  while(c!=EOF) {
-    if(c=='\n') break;
-    str_put(nd, c);
-    c = fgetc(*fp);
+  obj nd;
+  scope {
+    nd = str_c("");
+    while(c!=EOF) {
+      if(c=='\n') break;
+      str_put(nd, c);
+      c = fgetc(*fp);
+    }
+    ref(nd);
   }
-  auto_end_return(nd);
+  obj_return(nd);
 }
 
 obj file_lines(obj f) {
   assert(is_file(f));
-  auto_begin();
   FILE ** fp = f;
   fseek(*fp, SEEK_SET, 0);
-  obj a = array_new(0, nil);
-  while(1) {
-    auto_begin();
-    obj l = file_readline(f);
-    if(is_nil(l)) {
+  obj a;
+  scope {
+    a = array_new(0, nil);
+    while(1) {
+      auto_begin();
+      obj l = file_readline(f);
+      if(is_nil(l)) {
+        auto_end();
+        break;
+      }  
+      array_push(a, l);
       auto_end();
-      break;
-    }  
-    array_push(a, l);
-    auto_end();
-  } 
-  auto_end_return(a);
+    }
+    ref(a);
+  }
+  obj_return(a);
 }
-
 
 #endif
