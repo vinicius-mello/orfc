@@ -16,24 +16,10 @@
                               obj: ht_set)(a, k, v)
 #define num(v) _Generic((v), int: num_int, double: num_double)(v)
 
-inline int len(obj a) {
-  if(is_str(a)) return str_len(a);
-  if(is_array(a)) return array_len(a);
-  return 0;
-} 
-
-inline void print(obj a) {
-  obj_print(a);
-}
-
-inline void println(obj a) {
-  obj_println(a);
-}
-
-inline obj str(obj a) {
-  return str_obj(a);
-}
-
+int len(obj a);
+void print(obj a);
+void println(obj a);
+obj str(obj a);
 void orfc_init();
 
 #endif

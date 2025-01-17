@@ -24,6 +24,25 @@
 #include "file.h"
 #undef FILE_IMPLEMENTATION
 
+
+int len(obj a) {
+  if(is_str(a)) return str_len(a);
+  if(is_array(a)) return array_len(a);
+  return 0;
+} 
+
+void print(obj a) {
+  obj_print(a);
+}
+
+void println(obj a) {
+  obj_println(a);
+}
+
+obj str(obj a) {
+  return str_obj(a);
+}
+
 void orfc_init() {
   obj_init();
   array_init();
